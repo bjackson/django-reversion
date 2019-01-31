@@ -89,11 +89,6 @@ class Migration(migrations.Migration):
             name='object_id_int',
         ),
         migrations.AlterField(
-            model_name='version',
-            name='object_id',
-            field=models.CharField(help_text='Primary key of the model under version control.', max_length=191),
-        ),
-        migrations.AlterField(
             model_name='revision',
             name='date_created',
             field=models.DateTimeField(db_index=True, help_text='The date and time this revision was created.', verbose_name='date created'),

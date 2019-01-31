@@ -194,8 +194,7 @@ class Version(models.Model):
         help_text="The revision that contains this version.",
     )
 
-    object_id = models.CharField(
-        max_length=191,
+    object_id = models.TextField(
         help_text="Primary key of the model under version control.",
     )
 
