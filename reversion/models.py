@@ -118,7 +118,6 @@ class VersionQuerySet(models.QuerySet):
         content_type = _get_content_type(model, self.db)
         return self.filter(
             content_type=content_type,
-            db=model_db,
         )
 
     def get_for_object_reference(self, model, object_id, model_db=None):
@@ -152,7 +151,6 @@ class VersionQuerySet(models.QuerySet):
                     model_id=connection.ops.quote_name(model._meta.pk.db_column or model._meta.pk.attname),
                     object_id=connection.ops.quote_name("object_id"),
                     str=Version._meta.get_field("object_id").db_type(connection),
-                    db=connection.ops.quote_name("db"),
                     content_type_id=connection.ops.quote_name("content_type_id"),
                 ),
                 (model_db, content_type.id),
@@ -218,9 +216,7 @@ class Version(models.Model):
         fk_field="object_id",
     )
 
-    db = models.TextField(
-        help_text="The database the model under version control is stored in.",
-    )
+    db = 'default'
 
     format = models.CharField(
         max_length=255,
@@ -290,7 +286,6 @@ class Version(models.Model):
             parent_version = self.revision.version_set.get(
                 content_type=content_type,
                 object_id=parent_id,
-                db=self.db,
             )
             field_dict.update(parent_version.field_dict)
         return field_dict
@@ -304,7 +299,7 @@ class Version(models.Model):
     class Meta:
         app_label = 'reversion'
         unique_together = (
-            ("db", "content_type", "object_id", "revision"),
+            ("content_type", "object_id", "revision"),
         )
         ordering = ("-pk",)
 

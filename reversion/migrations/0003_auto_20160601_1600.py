@@ -36,43 +36,6 @@ def de_dupe_version_table(apps, schema_editor):
     ).delete()
 
 
-def set_version_db(apps, schema_editor):
-    """
-    Updates the db field in all Version models to point to the correct write
-    db for the model.
-    """
-    db_alias = schema_editor.connection.alias
-    Version = apps.get_model("reversion", "Version")
-    content_types = Version.objects.using(db_alias).order_by().values_list(
-        "content_type_id",
-        "content_type__app_label",
-        "content_type__model"
-    ).distinct()
-    model_dbs = defaultdict(list)
-    for content_type_id, app_label, model_name in content_types:
-        # We need to be able to access all models in the project, and we can't
-        # specify them up-front in the migration dependencies. So we have to
-        # just get the live model. This should be fine, since we don't actually
-        # manipulate the live model in any way.
-        try:
-            model = live_apps.get_model(app_label, model_name)
-        except LookupError:
-            # If the model appears not to exist, play it safe and use the default db.
-            db = "default"
-        else:
-            db = router.db_for_write(model)
-        model_dbs[db].append(content_type_id)
-    # Update db field.
-    # speedup for case when there is only default db
-    if DEFAULT_DB_ALIAS in model_dbs and len(model_dbs) == 1:
-        Version.objects.using(db_alias).update(db=DEFAULT_DB_ALIAS)
-    else:
-        for db, content_type_ids in model_dbs.items():
-            Version.objects.using(db_alias).filter(
-                content_type__in=content_type_ids
-            ).update(db=db)
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -93,11 +56,5 @@ class Migration(migrations.Migration):
             name='date_created',
             field=models.DateTimeField(db_index=True, help_text='The date and time this revision was created.', verbose_name='date created'),
         ),
-        migrations.AddField(
-            model_name='version',
-            name='db',
-            field=models.TextField(null=True, help_text='The database the model under version control is stored in.'),
-        ),
         migrations.RunPython(de_dupe_version_table),
-        migrations.RunPython(set_version_db),
     ]

@@ -185,7 +185,6 @@ def _add_to_revision(obj, using, model_db, explicit):
     version = Version(
         content_type=content_type,
         object_id=object_id,
-        db=model_db,
         format=version_options.format,
         serialized_data=serializers.serialize(
             version_options.format,
