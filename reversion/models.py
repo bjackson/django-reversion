@@ -219,7 +219,6 @@ class Version(models.Model):
     )
 
     db = models.TextField(
-        max_length=191,
         help_text="The database the model under version control is stored in.",
     )
 
